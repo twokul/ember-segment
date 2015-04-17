@@ -1,7 +1,7 @@
 {
   "name": "ember-segment",
-  "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "version": "0.0.1",
+  "description": "Adds segment.io to your Ember app.",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -11,11 +11,11 @@
     "build": "ember build",
     "test": "ember try:testall"
   },
-  "repository": "",
+  "repository": "https://github.com/twokul/ember-segment",
   "engines": {
-    "node": ">= 0.10.0"
+    "node": ">= 0.11.0"
   },
-  "author": "",
+  "author": "Alex Navasardyan",
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.0.2",
