@@ -1,25 +1,70 @@
-# Ember-segment
+# Ember Segment
 
-This README outlines the details of collaborating on this Ember addon.
+## How it works
 
-## Installation
+Addon will add the following code to your `router.js`:
 
-* `git clone` this repository
-* `npm install`
-* `bower install`
+```javascript
+// only if segment addon is enabled
+if (config.segment && config.segment.enabled) {
+  // `gatherPageAnalytics` action will be invoked on
+  // each transition and it can be handled on route/controller level.
+  Router.reopen({
+    didTransition(transitions) {
+      this.send('gatherPageAnalytics', transitions);
+      this._super.apply(this, transitions);
+    }
+  });
 
-## Running
+  // to make sure not to break your application
+  // default implementation of `gatherPageAnalytics`
+  // is provided
+  Ember.Route.reopen({
+    _actions: {
+      gatherPageAnalytics() {
+        return true;
+      }
+    }
+  });
+}
+```
 
-* `ember server`
-* Visit your app at http://localhost:4200.
+## How to use
 
-## Running Tests
+One way to track your application's pages would be to create a parent route:
 
-* `ember test`
-* `ember test --server`
+```javascript
+// base-route.js
+export default Ember.Route.extend({
+  actions: {
+    gatherPageAnalytics(transitions) {
+      const length = transitions.length;
+      const transition = transitions[length - 1];
 
-## Building
+      this.segmentAnalytics.trackPage(transition.name/*categoryName, properties, options*/);
+    }
+  }
+});
 
-* `ember build`
+// child-route.js
+import BaseRoute from 'base-route';
 
-For more information on using ember-cli, visit [http://www.ember-cli.com/](http://www.ember-cli.com/).
+export default BaseRoute.extend();
+```
+
+### Segment Service
+
+`trackAction` and `trackPage` return Promises and do [`track`](https://segment.com/docs/libraries/analytics.js/#track) and [`page`](https://segment.com/docs/libraries/analytics.js/#page) accordingly.
+
+## Configuration
+
+You can configure the addon through `config/enironment.js` by adding `segment` object to it.
+
+```javascript
+ENV.segment = {
+  // enable/disable analytics
+  enabled: true,
+  // api key for reporting
+  writeKey: ''
+};
+```
