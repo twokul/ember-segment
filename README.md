@@ -58,7 +58,7 @@ export default BaseRoute.extend();
 
 ## Configuration
 
-You can configure the addon through `config/enironment.js` by adding `segment` object to it.
+You can configure the addon through `config/environment.js` by adding `segment` object to it.
 
 ```javascript
 ENV.segment = {
