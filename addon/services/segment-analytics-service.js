@@ -2,23 +2,71 @@
 
 import Ember from 'ember';
 
-var Service = Ember.Service;
-var Promise = Ember.RSVP.Promise;
+const {
+  Logger,
+  Service,
+  computed,
+  on,
+  RSVP: {
+    Promise 
+  }
+} = Ember;
 
-export default Service.extend({
-  trackAction(actionName, properties, options) {
-    return new Promise((resolve) => {
-      analytics.track(actionName, properties, options, (data) => {
-        resolve(data);
-      });
-    });
+const get = Ember.get;
+
+export default Service.extend(Ember.Evented, {
+  errorMessage: 'Segment.io is not loaded yet (window.analytics)',
+
+  _queue: computed(() => []),
+
+  init: function() {
+    this._super();
+    if (!this._hasAnalytics()) {
+      Logger.error(get(this, 'errorMessage'));
+    }
   },
 
-  trackPage(pageName, categoryName, properties, options) {
-    return new Promise((resolve) => {
-      analytics.page(pageName, categoryName, properties, options, (data) => {
-        resolve(data);
-      });
+  _hasAnalytics: function() {
+    return !!(analytics && typeof analytics === "object");
+  },
+
+  _addSegmentTask(fn, ...args) {
+    if (!this._hasAnalytics()) {
+      Logger.warn(get(this, 'errorMessage'));
+      return;
+    }
+
+    const queue = get(this, '_queue');
+    queue.push({
+      fn,
+      args
     });
+    this.trigger('addedTask');
+  },
+
+  _workTask: on('addedTask', function() {
+    const queue = get(this, '_queue');
+    let task;
+
+    while (task = queue.shift()) {
+      const { fn, args } = task;
+      new Promise((resolve) => analytics[fn](...args, resolve));
+    }
+  }),
+
+  track() {
+    this._addSegmentTask('track', ...arguments);
+  },
+
+  page() {
+    this._addSegmentTask('page', ...arguments);
+  },
+
+  identify() {
+    this._addSegmentTask('identify', ...arguments);
+  },
+
+  alias() {
+    this._addSegmentTask('alias', ...arguments);
   }
 });

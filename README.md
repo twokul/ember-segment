@@ -2,31 +2,24 @@
 
 ## How it works
 
-Addon will add the following code to your `router.js`:
+To send data about your page views, the user should add the following code to `router.js`:
 
 ```javascript
 // only if segment addon is enabled
 if (config.segment && config.segment.enabled) {
   // `gatherPageAnalytics` action will be invoked on
   // each transition and it can be handled on route/controller level.
+  import { inject : { service } } = Ember;
+  
   Router.reopen({
-    didTransition(transitions) {
-      this.send('gatherPageAnalytics', transitions);
-      this._super.apply(this, transitions);
+    analytics: service('segment-analytics-service'),
+    
+    didTransition() {
+      const analytics = this.get('analytics');
+      analytics.page(this.get('url'));
+      this._super(...arguments);
     }
   });
-
-  // to make sure not to break your application
-  // default implementation of `gatherPageAnalytics`
-  // is provided
-  Ember.Route.reopen({
-    _actions: {
-      gatherPageAnalytics() {
-        return true;
-      }
-    }
-  });
-}
 ```
 
 ## How to use
@@ -35,13 +28,18 @@ One way to track your application's pages would be to create a parent route:
 
 ```javascript
 // base-route.js
+import { inject : { service } } = Ember;
+
 export default Ember.Route.extend({
+  analytics: service('segment-analytics-service'),
+
   actions: {
     gatherPageAnalytics(transitions) {
       const length = transitions.length;
       const transition = transitions[length - 1];
+      const analytics = get(this, 'analytics');
 
-      this.segmentAnalytics.trackPage(transition.name/*categoryName, properties, options*/);
+      analytics.page(transition.name/*categoryName, properties, options*/);
     }
   }
 });
@@ -50,6 +48,31 @@ export default Ember.Route.extend({
 import BaseRoute from 'base-route';
 
 export default BaseRoute.extend();
+```
+
+If you want to track an event, let's say after a successful signin you could do
+```javascript
+// base-route.js
+import { inject : { service } } = Ember;
+
+export default Ember.Route.extend({
+  analytics: service('segment-analytics-service'),
+
+  actions: {
+    transitionAfterSignin({ userName, email }) {
+      const analytics = get(this, 'analytics');
+      
+      analytics.identify({
+        userName,
+        email
+      }); // will be executed first
+      
+      analytics.track('Signed In'); // will be executed after the previous
+      
+      return this.transitionTo('signedInArea');
+    }
+  }
+});
 ```
 
 ### Segment Service
@@ -62,8 +85,6 @@ You can configure the addon through `config/environment.js` by adding `segment` 
 
 ```javascript
 ENV.segment = {
-  // enable/disable analytics
-  enabled: true,
   // api key for reporting
   writeKey: ''
 };
