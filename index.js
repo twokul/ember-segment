@@ -9,7 +9,7 @@ module.exports = {
       var segmentConfig = config.segment;
       var segmentVersion = '3.0.1';
 
-      if (!segmentConfig.writeKey) { return ''; }
+      if (!segmentConfig || !segmentConfig.writeKey) { return ''; }
 
       var script = [
         '<script type="text/javascript">',

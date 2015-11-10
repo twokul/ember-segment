@@ -1,3 +1,1 @@
-import SegmentAnalyticsService from 'ember-segment/services/segment-analytics-service';
-
-export default SegmentAnalyticsService;
+export { default } from 'ember-segment/services/segment-analytics-service';
