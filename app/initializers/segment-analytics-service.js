@@ -4,7 +4,8 @@ import SegmentAnalyticsService from 'ember-segment/services/segment-analytics-se
 export default {
   name: 'segment-analytics-service',
 
-  initialize(container, application) {
+  initialize() {
+    var application = arguments[1] || arguments[0];
     if (config.segment.enabled) {
       application.register('service:segment-analytics', SegmentAnalyticsService, { singleton: true });
 
